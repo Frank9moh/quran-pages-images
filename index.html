@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خريطة مع مسارات</title>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js'></script>
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css' />
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>خريطة مع مسار</h1>
+    <div id="map"></div>
+
+    <script>
+        // إعداد مفتاح الوصول
+        mapboxgl.accessToken = 'pk.eyJ1IjoiZnJhbmswbSIsImEiOiJjbGhqZTJsbjUwaDRlM3BwMXh5Y2o2dWJrIn0.EteNEV1PvX1FTm7LTk1XWQ';
+
+        // إنشاء الخريطة
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v12',
+            center: [39.1925, 21.4858], // مركز الخريطة
+            zoom: 4
+        });
+
+        // إضافة التحكم بالموقع
+        const geolocate = new mapboxgl.GeolocateControl({
+            positionOptions: { enableHighAccuracy: true },
+            trackUserLocation: true,
+            showUserHeading: true
+        });
+        map.addControl(geolocate, 'top-right');
+
+        // إضافة التحكم برسم المسار
+        const directions = new MapboxDirections({
+            accessToken: mapboxgl.accessToken,
+            unit: 'metric',
+            profile: 'mapbox/driving',
+            language: 'ar'
+        });
+        map.addControl(directions, 'top-left');
+
+        // إعداد المواقع والدبابيس
+        const markers = [
+            { lng: 46.6753, lat: 24.7136, title: "الرياض" },
+            { lng: 39.1925, lat: 21.4858, title: "مكة المكرمة" },
+            { lng: 50.1097, lat: 26.3927, title: "الدمام" },
+            { lng: 39.6182, lat: 24.4672, title: "المدينة المنورة" },
+            { lng: 35.9375, lat: 31.9454, title: "عمّان" },
+            { lng: 44.3661, lat: 33.3152, title: "بغداد" },
+            { lng: 31.2357, lat: 30.0444, title: " القاهرة \n  [الباسورد : 245]" }
+        ];
+
+        // عرض الدبابيس على الخريطة
+        markers.forEach(marker => {
+            const el = document.createElement('div');
+            el.className = 'marker';
+            el.style.backgroundImage = 'url(https://img.icons8.com/color/48/000000/marker.png)';
+            el.style.width = '30px';
+            el.style.height = '30px';
+            el.style.backgroundSize = '100%';
+
+            const mapMarker = new mapboxgl.Marker(el)
+                .setLngLat([marker.lng, marker.lat])
+                .setPopup(new mapboxgl.Popup({ offset: 25 }).setText(marker.title))
+                .addTo(map);
+
+            // عند النقر على الدبوس
+            el.addEventListener('click', () => {
+                geolocate.trigger(); // تحديد موقع المستخدم
+                geolocate.once('geolocate', (e) => {
+                    const userLocation = [e.coords.longitude, e.coords.latitude];
+                    directions.setOrigin(userLocation); // تعيين نقطة البداية
+                    directions.setDestination([marker.lng, marker.lat]); // تعيين الوجهة
+                });
+            });
+        });
+    </script>
+</body>
+</html>
